@@ -146,7 +146,7 @@ Link: {}
             fullname = maildir + mdir
             if not os.access(fullname, os.W_OK):
                 try: # to make the maildirs
-                    os.mkdir(fullname)
+                    os.makedirs(fullname)
                 except:
                     sys.exit('ERROR: accessing "{}" failed'.format(fullname))
 
