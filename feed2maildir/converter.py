@@ -184,9 +184,12 @@ Link: {}
     def compose(self, post):
         """Compose the mail using the tempate"""
         try: # to get the update/publish time from the post
-            updated = post.updated
+            self.updated = post.updated
+            self.updated_parsed = post.updated_parsed
         except: # the property is not set, use now()
-            updated = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
+            now = time.gmtime()
+            self.updated = time.strftime("%a, %d %b %Y %H:%M:%S +0000", now)
+            self.updated_parsed = now
         desc = ''
         if self.strip:
             stripper = HTMLStripper()
@@ -194,13 +197,13 @@ Link: {}
             desc = stripper.get_data()
         else:
             desc = post.description
-        return self.TEMPLATE.format(updated, post.title, self.name,
+        return self.TEMPLATE.format(self.updated, post.title, self.name,
                                     self.make_hash(post), post.link, desc)
 
     def write(self, message):
         """Take a message and write it to a mail"""
         rand = random.randint(0,0xFFFFFFFF)
-        dt = time.time()
+        dt = time.mktime(self.updated_parsed)
         ticks = int((dt - int(dt)) * 1000000)
         pid = str(os.getpid())
         host = os.uname()[1]
@@ -213,8 +216,9 @@ Link: {}
                     f.write(str(message.encode('utf8')))
                 else:
                     f.write(message)
-        except:
-            self.output('WARNING: failed to write message to file')
+            os.utime(name, (dt, dt))
+        except Exception as e:
+            self.output('WARNING: failed to write message to file due to error : ' + str(e))
 
     def mktime(self, arg):
         """Make a datetime object from a time string"""
