@@ -64,10 +64,8 @@ class Converter:
 Date: {}
 Subject: {}
 From: {}
-Content-Type: text/plain
+Content-Type: {}
 X-feed2maildirsimple-hash: {}
-
-Link: {}
 
 {}
 """
@@ -194,8 +192,39 @@ Link: {}
             desc = stripper.get_data()
         else:
             desc = post.description
+
+        plaintext = "Link: " + post.link + "\n\n" + desc
+        html = None
+
+        if not self.strip and 'content' in post:
+            htmls = [content['value'] for content in post['content']
+                    if content['type'] == 'text/html']
+            html = htmls[0] if htmls else None
+
+        if html is None:
+            content_type = 'text/plain'
+            body = plaintext
+        else:
+            # MIME multipart boundary (using a simple, standard approach)
+            boundary = "----=_NextPart_{}".format(hash(plaintext + html))
+            content_type = 'multipart/alternative; boundary="{}"'.format(boundary)
+            body = f"""--{boundary}
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+{plaintext}
+
+--{boundary}
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+{html}
+
+--{boundary}--
+"""
+
         return self.TEMPLATE.format(updated, post.title, self.name,
-                                    self.make_hash(post), post.link, desc)
+                                    content_type, self.make_hash(post), body)
 
     def write(self, message):
         """Take a message and write it to a mail"""
