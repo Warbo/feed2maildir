@@ -2,9 +2,9 @@
   nixpkgs ?
     import
       (fetchTarball {
-        name = "nixpkgs2305";
-        url = "https://github.com/NixOS/nixpkgs/archive/23.05.tar.gz";
-        sha256 = "10wn0l08j9lgqcw8177nh2ljrnxdrpri7bp0g7nvrsn9rkawvlbf";
+        name = "nixpkgs2511";
+        url = "https://github.com/NixOS/nixpkgs/archive/25.11.tar.gz";
+        sha256 = "sha256:1zn1lsafn62sz6azx6j735fh4vwwghj8cc9x91g5sx2nrg23ap9k";
       })
       {
         config = { };
@@ -16,17 +16,20 @@ with {
   pkg =
     {
       buildPythonPackage,
-      dateutil,
+      python-dateutil,
       feedparser,
       python,
+      setuptools,
     }:
     buildPythonPackage {
       name = "feed2maildirsimple";
       version = "0.4.0";
       src = ./.;
+      pyproject = true;
+      build-system = [ setuptools ];
       propagatedBuildInputs = [
         python
-        dateutil
+        python-dateutil
         feedparser
       ];
     };
